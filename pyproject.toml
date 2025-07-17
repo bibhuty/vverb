@@ -1,0 +1,14 @@
+[project]
+name = "vverb"
+version = "0.0.1"
+description = "Five-verb wrapper for vector databases"
+requires-python = ">=3.9"
+dependencies = ["asyncpg", "docker"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project.optional-dependencies]
+dev = ["pytest", "pytest_asyncio", "asyncpg", "pgvector", "docker"]
+[tool.pytest.ini-options]
+addopts = "-q"
+plugins = ["pytest_asyncio"]
