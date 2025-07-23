@@ -1,14 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "vverb"
 version = "0.0.1"
 description = "Five-verb wrapper for vector databases"
 requires-python = ">=3.9"
-dependencies = ["asyncpg", "docker"]
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+
+# ------------------------------------------------------------------
+# 1.  Core runtime deps — keep *tiny* so users don't pull Docker/pytest
+# ------------------------------------------------------------------
+dependencies = [
+  "asyncpg>=0.29",        # pgvector adapter only
+  # other engines get their own extras below
+]
+
+# Source-layout hint for Hatchling / pip
+packages = [{ include = "vverb", from = "src" }]
+
+# ------------------------------------------------------------------
+# 2.  Optional adapter/client extras (users install what they need)
+# ------------------------------------------------------------------
 [project.optional-dependencies]
-dev = ["pytest", "pytest_asyncio", "asyncpg", "pgvector", "docker"]
+pg     = ["asyncpg>=0.29"]                     # already core, but explicit
+#qdrant = ["qdrant-client>=1.9.0"]
+#milvus = ["pymilvus>=2.4.0"]
+#weaviate = ["weaviate-client>=4.5.0"]
+#pinecone = ["pinecone-client>=4.0.0"]
+
+# Dev / test extras
+dev = [
+  # testing
+  "pytest>=7.4", "pytest-asyncio>=0.23",
+  "testcontainers[postgres]>=3.7",   # spins up pgvector
+  # lint / format
+  "ruff>=0.4", "black>=24.4",
+  # type-checking (optional)
+  "mypy>=1.10",
+]
+
+# ------------------------------------------------------------------
+# 3.  pytest config — add src/ to PYTHONPATH so `import vverb` works
+# ------------------------------------------------------------------
 [tool.pytest.ini-options]
 addopts = "-q"
+pythonpath = ["src"]
 plugins = ["pytest_asyncio"]
+
+# ------------------------------------------------------------------
+# 4.  Hatch build target (so sdist/wheel include src/vverb/** only)
+# ------------------------------------------------------------------
+[tool.hatch.build.targets.wheel]
+packages = ["src/vverb"]

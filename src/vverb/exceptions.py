@@ -1,0 +1,2 @@
+class UnsupportedFeatureError:
+    pass
