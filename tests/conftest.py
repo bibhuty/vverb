@@ -5,9 +5,9 @@ import pytest, pytest_asyncio
 import asyncpg
 from pgvector.asyncpg import register_vector
 
-# ---------------------------------------------------------------------------
+# ───────────────────────────────────────────────────────────────
 # CONSTANTS
-# ---------------------------------------------------------------------------
+# ───────────────────────────────────────────────────────────────
 CONTAINER_NAME = "pgvector-test"
 HOST_PORT      = "6263"                 # host → container 5432
 IMAGE_TAG      = "pgvector/pgvector:0.8.0-pg17"
@@ -21,17 +21,16 @@ def _run_cmd(*args: str):
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
 
-# ---------------------------------------------------------------------------
-# 1.  Session-wide pgvector container
-# ---------------------------------------------------------------------------
+# ───────────────────────────────────────────────────────────────
+# 1. Session-wide pgvector container
+# ───────────────────────────────────────────────────────────────
 @pytest.fixture(scope="session")
 def pgvector_container() -> str:
     """
-    Spin up pgvector once per pytest session.  Yields the ready DSN
-    (postgresql://user:pass@localhost:6263/vverb).  Tears container down
-    at the end of the session.
+    Start pgvector once per test session, export env vars so adapter
+    can connect with zero kwargs, yield the DSN, then tear down.
     """
-    # Remove any stale container quietly
+    # Clean any stale container
     subprocess.run(["docker", "rm", "-f", CONTAINER_NAME],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -45,26 +44,32 @@ def pgvector_container() -> str:
         "-d", IMAGE_TAG
     )
 
-    # Wait a few seconds for Postgres to accept connections
-    time.sleep(5)
+    time.sleep(5)  # allow Postgres to accept connections
 
     dsn = DSN_TEMPLATE.format(port=HOST_PORT)
+
+    # ---------- export env vars for PgVectorAdapter ----------
+    os.environ["PGV_DSN"]  = dsn
+    os.environ["PGV_HOST"] = "localhost"
+    os.environ["PGV_PORT"] = HOST_PORT
+    os.environ["PGV_DB"]   = "vverb"
+    os.environ["PGV_USER"] = "pgvector"
+    os.environ["PGV_PASS"] = "pgvector"
+    os.environ["PGV_MIN_SIZE"] = "1"
+    os.environ["PGV_MAX_SIZE"] = "10"
+    # ---------------------------------------------------------
+
     yield dsn
 
-    # Teardown
     _run_cmd("docker", "rm", "-f", CONTAINER_NAME)
 
-# ---------------------------------------------------------------------------
-# 2.  Per-test asyncpg connection (clean slate each time)
-# ---------------------------------------------------------------------------
+# ───────────────────────────────────────────────────────────────
+# 2. Per-test asyncpg connection (clean slate each time)
+# ───────────────────────────────────────────────────────────────
 @pytest_asyncio.fixture(scope="function")
 async def conn(pgvector_container: str):
-    """
-    Asyncpg connection fixture — registers pgvector type codec,
-    creates a demo table once per test, truncates afterwards.
-    """
-    dsn  = pgvector_container
-    conn = await asyncpg.connect(dsn)
+    """Asyncpg connection fixture with pgvector type registered."""
+    conn = await asyncpg.connect(pgvector_container)
     await register_vector(conn)
 
     await conn.execute("""
@@ -74,14 +79,14 @@ async def conn(pgvector_container: str):
         );
     """)
 
-    yield conn                                           # <── test runs here
+    yield conn
 
     await conn.execute("TRUNCATE items;")
     await conn.close()
 
-# ---------------------------------------------------------------------------
-# 3.  pytest-asyncio event-loop override (one loop per session)
-# ---------------------------------------------------------------------------
+# ───────────────────────────────────────────────────────────────
+# 3. Single event loop for pytest-asyncio
+# ───────────────────────────────────────────────────────────────
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.new_event_loop()
