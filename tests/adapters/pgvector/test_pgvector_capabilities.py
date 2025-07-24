@@ -9,7 +9,7 @@ async def test_capabilities_structure(pgvector_container: str):
     PgVectorAdapter.capabilities() should be a dict containing at least the
     mandatory keys documented in BaseAdapter (here we check just 'filter').
     """
-    db = await vverb.connect("pgvector", dsn=pgvector_container)
+    db = await vverb.connect("pgvector")
     caps = db.capabilities()
 
     assert isinstance(caps, dict), "capabilities() must return a dict"

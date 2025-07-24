@@ -13,7 +13,7 @@ HOST_PORT      = "6263"                 # host → container 5432
 IMAGE_TAG      = "pgvector/pgvector:0.8.0-pg17"
 DSN_TEMPLATE   = "postgresql://pgvector:pgvector@localhost:{port}/vverb"
 
-INIT_SQL_PATH  = pathlib.Path(__file__).parent.parent / "init-vector.sql"
+INIT_SQL_PATH  = pathlib.Path(__file__).parent / "init-vector.sql"
 if not INIT_SQL_PATH.exists():
     raise FileNotFoundError("Create init-vector.sql in repo root first!")
 
