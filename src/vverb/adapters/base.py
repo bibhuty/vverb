@@ -20,7 +20,7 @@ class BaseAdapter(ABC):
     # ───────── schema ─────────
     @abstractmethod
     async def create_collection(
-        self, name: str, *, dim: int, metric: str, skip_if_exists: bool = True
+        self, *, schema, skip_if_exists: bool = True
     ): ...
 
     # ───────── CRUD verbs ────────
