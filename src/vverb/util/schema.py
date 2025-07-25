@@ -15,7 +15,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal, Dict, Any, Sequence
 from dataclasses import dataclass, field
+from vverb._log import logger as _root_logger
 
+log = _root_logger.getChild("util.schema")
 
 # ---------------------------------------------------------------------------
 # Similarity metrics (vector space distance) ────────────────────────────────

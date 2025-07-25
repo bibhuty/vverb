@@ -1,13 +1,17 @@
-import os, asyncpg
+import asyncpg
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
-from .mapping import TYPE_MAP, METRIC_OPCLASS
-from ..base import BaseAdapter          # ← relative import (dot = same package)
-# ---------------- verbs (stubs) --------------
-from ...util.schema import TableSchema, VectorCol, FieldCol, Metric, FieldType
 from asyncpg import Connection
-from typing import Mapping
+
+from .mapping import TYPE_MAP, METRIC_OPCLASS
+from ..base import BaseAdapter  # ← relative import (dot = same package)
+# ---------------- verbs (stubs) --------------
+from ...util.schema import TableSchema
+from vverb._log import logger as _root_logger
+
+log = _root_logger.getChild("pgvector")
 # … keep DEFAULT_PORT etc …
 __all__ = ["PgVectorAdapter"]     # ←  export list lives at module level
                                   #     everything else (helper funcs,
@@ -57,7 +61,7 @@ class PgVectorAdapter(BaseAdapter):
         user = user or os.getenv("PGV_USER")
         password = password or os.getenv("PGV_PASS")
 
-
+        log.info("Connecting to pgvector database...")
         # asyncpg accepts either DSN or individual params
         pool = await asyncpg.create_pool(
             host= host,

@@ -31,7 +31,7 @@ pg     = [
 #milvus = ["pymilvus>=2.4.0"]
 #weaviate = ["weaviate-client>=4.5.0"]
 #pinecone = ["pinecone-client>=4.0.0"]
-
+structured-logging = ["structlog>=24.1"]
 # Dev / test extras
 dev = [
   # testing
@@ -50,10 +50,11 @@ dev = [
 # ------------------------------------------------------------------
 # 3.  pytest config — add src/ to PYTHONPATH so `import vverb` works
 # ------------------------------------------------------------------
-[tool.pytest.ini-options]
+[tool.pytest.ini_options]
 addopts = "-q"
+log_cli = true
+log_cli_level = "INFO"
 pythonpath = ["src"]
-plugins = ["pytest_asyncio"]
 
 # ------------------------------------------------------------------
 # 4.  Hatch build target (so sdist/wheel include src/vverb/** only)

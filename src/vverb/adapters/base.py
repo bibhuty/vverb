@@ -1,7 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
+from vverb._log import logger as _root_logger
 
+log = _root_logger.getChild("adapters.base")
 class BaseAdapter(ABC):
     """All concrete adapters subclass this. Five verbs only."""
 
