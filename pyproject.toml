@@ -31,7 +31,6 @@ pg     = [
 #milvus = ["pymilvus>=2.4.0"]
 #weaviate = ["weaviate-client>=4.5.0"]
 #pinecone = ["pinecone-client>=4.0.0"]
-structured-logging = ["structlog>=24.1"]
 # Dev / test extras
 dev = [
   # testing
