@@ -10,10 +10,7 @@ Example
 from importlib import import_module
 from typing import Any
 
-_ADAPTERS = {
-    "pgvector":  ("vverb.adapters.pgvector.core", "PgVectorAdapter"),
-    # qdrant, milvus, … will be added later
-}
+from .mapping import ADAPTERS
 
 async def connect(backend: str, **cfg: Any):
     """
@@ -29,10 +26,10 @@ async def connect(backend: str, **cfg: Any):
     """
     backend = backend.lower()
     try:
-        module_name, cls_name = _ADAPTERS[backend]
+        module_name, cls_name = ADAPTERS[backend]
     except KeyError:
         raise ValueError(f"Unknown backend '{backend}'. "
-                         f"Supported: {', '.join(_ADAPTERS)}")
+                         f"Supported: {', '.join(ADAPTERS)}")
 
     module = import_module(module_name)
     AdapterClass = getattr(module, cls_name)          # type: ignore[attr-defined]

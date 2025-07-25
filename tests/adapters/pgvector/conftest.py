@@ -1,75 +1,85 @@
 # tests/conftest.py
 from __future__ import annotations
 import asyncio, os, subprocess, time, pathlib
+from typing import Any, Generator
+
 import pytest, pytest_asyncio
 import asyncpg
 from pgvector.asyncpg import register_vector
 
 # ───────────────────────────────────────────────────────────────
-# CONSTANTS
+# ENV-BACKED CONSTANTS (with defaults)
 # ───────────────────────────────────────────────────────────────
-CONTAINER_NAME = "pgvector-test"
-HOST_PORT      = "6263"                 # host → container 5432
-IMAGE_TAG      = "pgvector/pgvector:0.8.0-pg17"
-DSN_TEMPLATE   = "postgresql://pgvector:pgvector@localhost:{port}/vverb"
+PGV_HOST     = os.getenv("PGV_HOST", "localhost")
+PGV_PORT     = os.getenv("PGV_PORT", "6263")
+PGV_DB       = os.getenv("PGV_DB", "vverb")
+PGV_USER     = os.getenv("PGV_USER", "pgvector")
+PGV_PASS     = os.getenv("PGV_PASS", "pgvector")
+PGV_MIN_SIZE = os.getenv("PGV_MIN_SIZE", "1")
+PGV_MAX_SIZE = os.getenv("PGV_MAX_SIZE", "10")
 
-INIT_SQL_PATH  = pathlib.Path(__file__).parent / "init-vector.sql"
+# ───────────────────────────────────────────────────────────────
+# Docker & DSN constants
+# ───────────────────────────────────────────────────────────────
+CONTAINER_NAME = os.getenv("PGV_CONTAINER_NAME", "pgvector-test")
+IMAGE_TAG      = os.getenv("PGV_IMAGE_TAG", "pgvector/pgvector:0.8.0-pg17")
+
+INIT_SQL_PATH = pathlib.Path(__file__).parent / "init-vector.sql"
 if not INIT_SQL_PATH.exists():
-    raise FileNotFoundError("Create init-vector.sql in repo root first!")
+    raise FileNotFoundError("Create init-vector.sql in tests/adapters/pgvector first!")
 
 def _run_cmd(*args: str):
-    subprocess.run(args, check=True, stdout=subprocess.DEVNULL,
-                   stderr=subprocess.DEVNULL)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # ───────────────────────────────────────────────────────────────
 # 1. Session-wide pgvector container
 # ───────────────────────────────────────────────────────────────
 @pytest.fixture(scope="session")
-def pgvector_container() -> str:
+def pgvector_config() -> Generator[tuple[str, str, str], Any, None]:
     """
-    Start pgvector once per test session, export env vars so adapter
-    can connect with zero kwargs, yield the DSN, then tear down.
+    Starts a pgvector container once per session, then:
+    - Yields the DSN
+    - Tears it down when tests complete
     """
-    # Clean any stale container
+    # Ensure no stale container
     subprocess.run(["docker", "rm", "-f", CONTAINER_NAME],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    # Launch fresh
     _run_cmd(
         "docker", "run", "--name", CONTAINER_NAME,
-        "-e", "POSTGRES_USER=pgvector",
-        "-e", "POSTGRES_PASSWORD=pgvector",
-        "-e", "POSTGRES_DB=vverb",
+        "-e", f"POSTGRES_USER={PGV_USER}",
+        "-e", f"POSTGRES_PASSWORD={PGV_PASS}",
+        "-e", f"POSTGRES_DB={PGV_DB}",
         "-v", f"{INIT_SQL_PATH}:/docker-entrypoint-initdb.d/init-vector.sql:ro",
-        "-p", f"{HOST_PORT}:5432",
+        "-p", f"{PGV_PORT}:5432",
         "-d", IMAGE_TAG
     )
 
-    time.sleep(5)  # allow Postgres to accept connections
+    # Wait for Postgres to be ready
+    time.sleep(5)
 
-    dsn = DSN_TEMPLATE.format(port=HOST_PORT)
+    # Build DSN pointing at our container
+    dsn = f"postgresql://{PGV_USER}:{PGV_PASS}@{PGV_HOST}:{PGV_PORT}/{PGV_DB}"
+    min_pool_size = PGV_MIN_SIZE
+    max_pool_size = PGV_MAX_SIZE
 
-    # ---------- export env vars for PgVectorAdapter ----------
-    os.environ["PGV_DSN"]  = dsn
-    os.environ["PGV_HOST"] = "localhost"
-    os.environ["PGV_PORT"] = HOST_PORT
-    os.environ["PGV_DB"]   = "vverb"
-    os.environ["PGV_USER"] = "pgvector"
-    os.environ["PGV_PASS"] = "pgvector"
-    os.environ["PGV_MIN_SIZE"] = "1"
-    os.environ["PGV_MAX_SIZE"] = "10"
-    # ---------------------------------------------------------
+    yield dsn, min_pool_size, max_pool_size
 
-    yield dsn
-
+    # Teardown
     _run_cmd("docker", "rm", "-f", CONTAINER_NAME)
 
 # ───────────────────────────────────────────────────────────────
 # 2. Per-test asyncpg connection (clean slate each time)
 # ───────────────────────────────────────────────────────────────
 @pytest_asyncio.fixture(scope="function")
-async def conn(pgvector_container: str):
-    """Asyncpg connection fixture with pgvector type registered."""
-    conn = await asyncpg.connect(pgvector_container)
+async def conn(pgvector_config: tuple[str,int,int]):
+    dsn = pgvector_config[0]
+    """
+    Asyncpg connection fixture with pgvector type registered.
+    Creates a fresh `items` table each test.
+    """
+    conn = await asyncpg.connect(dsn)
     await register_vector(conn)
 
     await conn.execute("""
