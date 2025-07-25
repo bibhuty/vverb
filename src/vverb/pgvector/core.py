@@ -1,36 +1,42 @@
+"""
+PGVector adapter implementation for vverb.
+
+Implements the five core verbs:
+    • connect  • create_collection  • upsert  • query  • delete
+plus capability negotiation.
+"""
+
+from __future__ import annotations
+
 import asyncpg
-import os
+from asyncpg import Connection
 from contextlib import asynccontextmanager
 from typing import Any
 
-from asyncpg import Connection
-
 from .mapping import TYPE_MAP, METRIC_OPCLASS
-from ..base import BaseAdapter  # ← relative import (dot = same package)
-# ---------------- verbs (stubs) --------------
-from ...util.schema import TableSchema
+from ..base import BaseAdapter          # vverb.adapters.base
 from vverb._log import logger as _root_logger
+from ..util.schema import TableSchema
 
 log = _root_logger.getChild("pgvector")
-# … keep DEFAULT_PORT etc …
-__all__ = ["PgVectorAdapter"]     # ←  export list lives at module level
-                                  #     everything else (helper funcs,
-                                  #     constants, etc.) stays “private”
+
+__all__ = ["PgVectorAdapter"]
+
+
 class PgVectorAdapter(BaseAdapter):
     """
-        Concrete adapter for pgvector.
+    Concrete adapter for pgvector.
 
-        Parameters accepted by `connect`
-
-        ----------
-        host : str                 Postgres host, default "localhost"
-        port : int                 Port, default 5432
-        database : str | None      DB name; default "postgres"
-        user : str | None          User; default same as OS user
-        password : str | None      Password
-        min_size : int             Pool min connections (default 1)
-        max_size : int             Pool max connections (default 5)
-        """
+    Parameters accepted by `connect`
+    --------------------------------
+    host : str                 Postgres host, default "localhost"
+    port : int                 Port, default 5432
+    database : str | None      DB name; default "postgres"
+    user : str | None          User; default same as OS user
+    password : str | None      Password
+    min_pool_size : int        Pool min connections (default 1)
+    max_pool_size : int        Pool max connections (default 5)
+    """
 
     # ------------------------------------------------------------------ #
     # construction helpers                                               #
@@ -49,20 +55,22 @@ class PgVectorAdapter(BaseAdapter):
         max_pool_size: int = 1,
         **kw: Any,
     ) -> "PgVectorAdapter":
+        """Create (or fetch) an asyncpg pool and return an adapter instance."""
+        log.info("Connecting to pgvector database…")
 
-        log.info("Connecting to pgvector database...")
-        # asyncpg accepts either DSN or individual params
+        # asyncpg accepts either a DSN or individual params
         pool = await asyncpg.create_pool(
             dsn=dsn,
             min_size=int(min_pool_size),
             max_size=int(max_pool_size),
         )
+
         adapter = cls(pool, dsn=dsn)
-        await adapter._ensure_vector_extension()  # ensure pgvector extension is installed
+        await adapter._ensure_vector_extension()
         return adapter
 
     # ---------------------- async context manager --------------------- #
-    async def __aenter__(self):  # so you can:  async with await connect() as db:
+    async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
@@ -72,31 +80,29 @@ class PgVectorAdapter(BaseAdapter):
         """Close the underlying asyncpg pool."""
         await self.pool.close()
 
-    # … inside PgVectorAdapter class …
-
     # ------------------------------------------------------------------
     # create_collection
     # ------------------------------------------------------------------
-    async def create_collection(self, schema: TableSchema, *, skip_if_exists: bool = True, **kwargs) -> None:
+    async def create_collection(
+        self,
+        schema: TableSchema,
+        *,
+        skip_if_exists: bool = True,
+        **kwargs: Any,
+    ) -> None:
         """
-        Create a Postgres table with a pgvector column and an HNSW index.
-
-        Parameters
-        ----------
-        schema : TableSchema
-            High-level description of table + vector column + scalar fields.
-        skip_if_exists : bool
-            If True (default) use `CREATE TABLE IF NOT EXISTS` so the call
-            is idempotent.
+        Create a Postgres table with a vector column and an HNSW index.
         """
         opclass = METRIC_OPCLASS.get(schema.vector.metric)
         if opclass is None:
-            raise ValueError(f"Metric '{schema.vector.metric}' not supported by pgvector")
+            raise ValueError(
+                f"Metric '{schema.vector.metric}' not supported by pgvector"
+            )
 
         # ---- build column list ----
         col_defs: list[str] = [
             f"{schema.id_field} TEXT PRIMARY KEY",
-            f"{schema.vector.name} VECTOR({schema.vector.dim})"
+            f"{schema.vector.name} VECTOR({schema.vector.dim})",
         ]
 
         for fld in schema.fields:
@@ -108,37 +114,47 @@ class PgVectorAdapter(BaseAdapter):
                 extras += f" DEFAULT {fld.default}"
             col_defs.append(f"{fld.name} {sql_type}{extras}")
 
-        ddl = f"""
-            CREATE TABLE {"IF NOT EXISTS" if skip_if_exists else ""} {schema.table} (
-                {", ".join(col_defs)}
-            );
-        """
+        ddl = (
+            f"CREATE TABLE {'IF NOT EXISTS' if skip_if_exists else ''} "
+            f"{schema.table} ({', '.join(col_defs)});"
+        )
 
-        index = f"""
-            CREATE INDEX IF NOT EXISTS {schema.table}_{schema.vector.name}_idx
-                ON {schema.table}
-             USING hnsw ({schema.vector.name} {opclass});
-        """
+        index = (
+            f"CREATE INDEX IF NOT EXISTS {schema.table}_{schema.vector.name}_idx "
+            f"ON {schema.table} USING hnsw "
+            f"({schema.vector.name} {opclass});"
+        )
 
         # ---- execute ----
         async with self.pool.acquire() as conn:  # type: Connection
             await conn.execute(ddl)
             await conn.execute(index)
 
-    async def upsert(self, *a, **k): ...
+    # ------------------------------------------------------------------
+    # stub implementations for the remaining verbs
+    # ------------------------------------------------------------------
+    async def upsert(self, *a, **k):  # TODO
+        ...
 
-    async def query(self, *a, **k): return []
+    async def query(self, *a, **k):  # TODO
+        return []
 
-    async def delete(self, *a, **k): ...
+    async def delete(self, *a, **k):  # TODO
+        ...
 
-    # ------------- capability probe -------------
-    def capabilities(self):
+    # ------------------------------------------------------------------
+    # capability probe
+    # ------------------------------------------------------------------
+    def capabilities(self) -> dict[str, Any]:
         return {
             "filter": False,
             "max_batch": 5000,
             "metrics": ["cosine", "l2", "ip"],
         }
-    # ------------- helper methods -------------
+
+    # ------------------------------------------------------------------
+    # helper utilities
+    # ------------------------------------------------------------------
     @asynccontextmanager
     async def raw(self):
         """Yield a borrowed asyncpg connection and release it automatically."""
@@ -149,22 +165,18 @@ class PgVectorAdapter(BaseAdapter):
             await self.pool.release(conn)
 
     async def _ensure_vector_extension(self):
-        """Ensure the pgvector extension is installed."""
+        """Install pgvector extension if not already present."""
         async with self.pool.acquire() as conn:
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-            # Note: this is a no-op if the extension already exists
-            # but we need to ensure it's there before creating tables
 
     async def create_table(self, name: str, dim: int, metric: str):
-        """
-        Create a table with a vector column.
-        """
+        """Legacy helper kept for backward-compat tests."""
         async with self.pool.acquire() as conn:
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE IF NOT EXISTS {name} (
                     id TEXT PRIMARY KEY,
                     embedding VECTOR({dim}) USING {metric}
                 );
-            """)
-            # Note: this is a no-op if the table already exists
-            # but we need to ensure the vector column is created
+                """
+            )

@@ -9,45 +9,48 @@ description = "Five-verb wrapper for vector databases"
 requires-python = ">=3.9"
 
 # ------------------------------------------------------------------
-# 1.  Core runtime deps — keep *tiny* so users don't pull Docker/pytest
+# 1. Core runtime deps — keep tiny so users don't pull Docker/pytest
 # ------------------------------------------------------------------
 dependencies = [
-  "asyncpg>=0.29",        # pgvector adapter only
-  # other engines get their own extras below
+  "asyncpg>=0.29"
 ]
 
 # Source-layout hint for Hatchling / pip
 packages = [{ include = "vverb", from = "src" }]
 
 # ------------------------------------------------------------------
-# 2.  Optional adapter/client extras (users install what they need)
+# 2. Optional adapter/client extras (users install what they need)
 # ------------------------------------------------------------------
 [project.optional-dependencies]
-pg     = [
+pgvector = [
   "asyncpg>=0.29",
-  "pgvector>=0.2.4",              # ← added
+  "pgvector>=0.2.4"
 ]
-#qdrant = ["qdrant-client>=1.9.0"]
-#milvus = ["pymilvus>=2.4.0"]
-#weaviate = ["weaviate-client>=4.5.0"]
-#pinecone = ["pinecone-client>=4.0.0"]
+
+# Additional adapters (uncomment when implemented)
+# qdrant  = ["qdrant-client>=1.9.0"]
+# milvus  = ["pymilvus>=2.4.0"]
+# weaviate = ["weaviate-client>=4.5.0"]
+# pinecone = ["pinecone-client>=4.0.0"]
+
 # Dev / test extras
 dev = [
   # testing
   "pytest>=7.4",
   "pytest-asyncio>=0.23",
-  "testcontainers[postgres]>=3.7",   # spins up pgvector
+  "testcontainers[postgres]>=3.7",
   # adapter libs needed for tests
-  "pgvector>=0.2.4",                 # ← added
+  "asyncpg>=0.29",
+  "pgvector>=0.2.4",
   # lint / format
   "ruff>=0.4",
   "black>=24.4",
-  # type-checking (optional)
-  "mypy>=1.10",
+  # type-checking
+  "mypy>=1.10"
 ]
 
 # ------------------------------------------------------------------
-# 3.  pytest config — add src/ to PYTHONPATH so `import vverb` works
+# 3. pytest config — add src/ to PYTHONPATH so `import vverb` works
 # ------------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -56,7 +59,7 @@ log_cli_level = "INFO"
 pythonpath = ["src"]
 
 # ------------------------------------------------------------------
-# 4.  Hatch build target (so sdist/wheel include src/vverb/** only)
+# 4. Hatch build target (so sdist/wheel includes src/vverb/** only)
 # ------------------------------------------------------------------
 [tool.hatch.build.targets.wheel]
 packages = ["src/vverb"]

@@ -1,36 +1,16 @@
 """
-Public entry-point for vverb.
+vverb namespace package.
 
-Example
--------
-    import vverb
-    db = await vverb.connect("pgvector", dsn="postgres://...")
+Usage
+-----
+Pick the adapter you need and import it explicitly:
+
+    from vverb.pgvector import connect
+    db = await connect(dsn="postgres://...")
+
+Each adapter lives in its own sub-package under ``vverb.<adapter>``.
+No central ``vverb.connect()`` helper is provided anymore.
 """
 
-from importlib import import_module
-from typing import Any
-
-from .mapping import ADAPTERS
-
-async def connect(backend: str, **cfg: Any):
-    """
-    Factory that imports the requested adapter on-demand
-    and returns a connected instance.
-
-    Parameters
-    ----------
-    backend : str
-        One of: "pgvector", "qdrant", "milvus", "weaviate", "pinecone".
-    **cfg
-        Keyword arguments passed straight to `<Adapter>.connect(**cfg)`.
-    """
-    backend = backend.lower()
-    try:
-        module_name, cls_name = ADAPTERS[backend]
-    except KeyError:
-        raise ValueError(f"Unknown backend '{backend}'. "
-                         f"Supported: {', '.join(ADAPTERS)}")
-
-    module = import_module(module_name)
-    AdapterClass = getattr(module, cls_name)          # type: ignore[attr-defined]
-    return await AdapterClass.connect(**cfg)          # noqa: E1102
+# Nothing else on purpose: keep the root package clean.
+__all__: list[str] = []
