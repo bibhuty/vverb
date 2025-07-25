@@ -1,4 +1,4 @@
-from ...util.schema import FieldType, Metric
+from ..util.schema import FieldType, Metric
 from typing import Mapping
 
 TYPE_MAP: Mapping[FieldType, str] = {

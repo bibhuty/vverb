@@ -1,10 +1,10 @@
-# tests/adapters/pgvector/test_pgvector_adapter.py
 from __future__ import annotations
 
 import pytest
 import pytest_asyncio
 
-import vverb
+# modern import: adapter-specific entry-point
+from vverb.pgvector import connect
 
 pytestmark = pytest.mark.asyncio
 
@@ -14,14 +14,23 @@ pytestmark = pytest.mark.asyncio
 # ───────────────────────────────────────────────
 @pytest_asyncio.fixture
 async def db(pgvector_config: tuple[str, int, int]):
+    """Yield a connected PgVectorAdapter instance."""
     dsn, min_pool_size, max_pool_size = pgvector_config
-    """Connected PgVectorAdapter instance."""
-    database = await vverb.connect("pgvector", dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)
+
+    database = await connect(
+        dsn=dsn,
+        min_pool_size=min_pool_size,
+        max_pool_size=max_pool_size,
+    )
     try:
         yield database
     finally:
         await database.close()
 
+
+# ───────────────────────────────────────────────
+# Tests
+# ───────────────────────────────────────────────
 async def test_create_extension(db):
     """
     Ensure the pgvector extension is created if it doesn't exist.
@@ -31,5 +40,7 @@ async def test_create_extension(db):
 
     # Verify by checking if the extension exists
     async with db.raw() as conn:
-        result = await conn.fetchval("SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';")
+        result = await conn.fetchval(
+            "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';"
+        )
         assert result == 1, "pgvector extension should be installed"

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]           # run on pushes to main (keeps main green)
+    branches: [main]          # keep main green
   pull_request:
-    branches: [main]           # run on every PR targeting main
+    branches: [main]          # run on every PR targeting main
 
 jobs:
   tests:
@@ -12,26 +12,29 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # ───── Setup Python & cache venv ─────
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      # ───── Set up Python & cache pip ─────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Poetry/Pip deps & cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-    - run: |
-        python -m pip install -U pip
-        pip install -e ".[dev]"           # installs pytest, testcontainers, …
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
 
-    # ───── Run the test suite ─────
-    - name: Run pytest
-      env:
-        PYTHONPATH: src                   # src-layout
-      run: |
-        pytest -q
+      # ───── Install project with dev + adapter extras ─────
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install -e ".[dev,pgvector]"   # tooling + runtime libs
+
+      # ───── Run the test suite ─────
+      - name: Run pytest
+        env:
+          PYTHONPATH: src                   # src-layout convenience
+        run: |
+          pytest -q
