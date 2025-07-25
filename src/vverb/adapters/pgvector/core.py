@@ -45,34 +45,19 @@ class PgVectorAdapter(BaseAdapter):
         cls,
         *,
         dsn: str | None = None,
-        host: str | None = None,
-        port: int | None = None,
-        database: str | None = None,
-        user: str | None = None,
-        password: str | None = None,
-        min_size: int = 1,
-        max_size: int = 10,
+        min_pool_size: int = 1,
+        max_pool_size: int = 1,
         **kw: Any,
     ) -> "PgVectorAdapter":
-
-        host = host or os.getenv("PGV_HOST", "localhost")
-        port = port or int(os.getenv("PGV_PORT", 5432))
-        database = database or os.getenv("PGV_DB", "postgres")
-        user = user or os.getenv("PGV_USER")
-        password = password or os.getenv("PGV_PASS")
 
         log.info("Connecting to pgvector database...")
         # asyncpg accepts either DSN or individual params
         pool = await asyncpg.create_pool(
-            host= host,
-            port= port,
-            database= database,
-            user= user,
-            password= password,
-            min_size=min_size,
-            max_size=max_size,
+            dsn=dsn,
+            min_size=int(min_pool_size),
+            max_size=int(max_pool_size),
         )
-        adapter = cls(pool, dsn=dsn, host=host, port=port, database=database, user=user)
+        adapter = cls(pool, dsn=dsn)
         await adapter._ensure_vector_extension()  # ensure pgvector extension is installed
         return adapter
 

@@ -1,8 +1,10 @@
 # tests/adapters/pgvector/test_pgvector_adapter.py
 from __future__ import annotations
-import uuid, pytest, pytest_asyncio
+
+import pytest
+import pytest_asyncio
+
 import vverb
-from vverb.util.schema import TableSchema, VectorCol, FieldCol, FieldType, Metric
 
 pytestmark = pytest.mark.asyncio
 
@@ -11,19 +13,14 @@ pytestmark = pytest.mark.asyncio
 # Fixtures
 # ───────────────────────────────────────────────
 @pytest_asyncio.fixture
-async def db(pgvector_container: str):
+async def db(pgvector_config: tuple[str, int, int]):
+    dsn, min_pool_size, max_pool_size = pgvector_config
     """Connected PgVectorAdapter instance."""
-    database = await vverb.connect("pgvector", dsn=pgvector_container)
+    database = await vverb.connect("pgvector", dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)
     try:
         yield database
     finally:
         await database.close()
-
-
-@pytest_asyncio.fixture
-def coll_name():
-    """Unique table / collection name per test."""
-    return "vv_" + uuid.uuid4().hex[:8]
 
 async def test_create_extension(db):
     """

@@ -9,9 +9,10 @@ from vverb.util.schema import TableSchema, VectorCol, FieldCol, FieldType, Metri
 pytestmark = pytest.mark.asyncio
 
 @pytest_asyncio.fixture
-async def db(pgvector_container: str):
+async def db(pgvector_config: tuple[str,int,int]):
+    dsn, min_pool_size, max_pool_size = pgvector_config
     """Connected PgVectorAdapter instance."""
-    database = await vverb.connect("pgvector", dsn=pgvector_container)
+    database = await vverb.connect("pgvector", dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)
     try:
         yield database
     finally:

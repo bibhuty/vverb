@@ -4,12 +4,13 @@ import pytest, vverb
 pytestmark = pytest.mark.asyncio
 
 
-async def test_capabilities_structure(pgvector_container: str):
+async def test_capabilities_structure(pgvector_config: tuple[str, int, int]):
+    dsn, min_pool_size, max_pool_size = pgvector_config
     """
     PgVectorAdapter.capabilities() should be a dict containing at least the
     mandatory keys documented in BaseAdapter (here we check just 'filter').
     """
-    db = await vverb.connect("pgvector")
+    db = await vverb.connect("pgvector", dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)
     caps = db.capabilities()
 
     assert isinstance(caps, dict), "capabilities() must return a dict"
@@ -18,12 +19,13 @@ async def test_capabilities_structure(pgvector_container: str):
 
     await db.close()
 
-async def test_connect_smoke(pgvector_container):
+async def test_connect_smoke(pgvector_config: tuple[str, int, int]):
+    dsn, min_pool_size, max_pool_size = pgvector_config
     """
     Simple connection test: make sure the asyncpg pool is created
     when no explicit connection kwargs are provided (adapter reads
     PGV_* env vars set by the fixture).
     """
-    db = await vverb.connect("pgvector")     # <- no dsn/host/port
+    db = await vverb.connect("pgvector", dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)     # <- no dsn/host/port
     assert db.pool is not None               # pool object exists
     await db.close()
