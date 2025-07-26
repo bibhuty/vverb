@@ -22,3 +22,8 @@ repos:
           - "vverb"
           - "--pretty"
           - "--show-error-codes"
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.8.3
+    hooks:
+      - id: commitizen
+        stages: [ commit-msg ]      # only checks the message

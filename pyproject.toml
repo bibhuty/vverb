@@ -51,7 +51,9 @@ dev = [
   "pre-commit>=3.7",        #  ← NEW
 
   # type-checking
-  "mypy>=1.10"
+  "mypy>=1.10",
+
+    "commitizen>=3.13",
 ]
 
 # ------------------------------------------------------------------
@@ -116,3 +118,8 @@ warn_unused_ignores     = true
 # Allow untyped tests for now
 module = "tests.*"
 ignore_errors = true
+
+[tool.commitizen]
+name = "cz_conventional_commits"   # enforce the 1.0.0 spec
+version = "0.0.1"                  # used when you run `cz bump`
+tag_format = "v$version"
