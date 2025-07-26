@@ -40,7 +40,5 @@ async def test_create_extension(db):
 
     # Verify by checking if the extension exists
     async with db.raw() as conn:
-        result = await conn.fetchval(
-            "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';"
-        )
+        result = await conn.fetchval("SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';")
         assert result == 1, "pgvector extension should be installed"

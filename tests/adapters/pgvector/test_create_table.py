@@ -1,14 +1,18 @@
 from __future__ import annotations
-import uuid, pytest
 
+import uuid
+
+import pytest
 import pytest_asyncio
+
 from vverb.pgvector import connect
-from vverb.util.schema import TableSchema, VectorCol, FieldCol, FieldType, Metric
+from vverb.util.schema import FieldCol, FieldType, Metric, TableSchema, VectorCol
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest_asyncio.fixture
-async def db(pgvector_config: tuple[str,int,int]):
+async def db(pgvector_config: tuple[str, int, int]):
     dsn, min_pool_size, max_pool_size = pgvector_config
     """Connected PgVectorAdapter instance."""
     database = await connect(dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)
@@ -16,6 +20,7 @@ async def db(pgvector_config: tuple[str,int,int]):
         yield database
     finally:
         await database.close()
+
 
 async def test_create_table(db):
     """
@@ -27,7 +32,7 @@ async def test_create_table(db):
     schema = TableSchema(
         table=table_name,
         vector=VectorCol("embedding", dim=3, metric=Metric.COSINE),
-        fields=[FieldCol("title", FieldType.STRING)]
+        fields=[FieldCol("title", FieldType.STRING)],
     )
 
     # 1) create

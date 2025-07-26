@@ -1,40 +1,49 @@
+# workflows/ci.yml
 name: CI
 
 on:
   push:
-    branches: [main]          # keep main green
+    branches: [main]
   pull_request:
-    branches: [main]          # run on every PR targeting main
+    branches: [main]
 
 jobs:
-  tests:
+  sanity-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      # ───── Set up Python & cache pip ─────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Cache pip
+      - name: Cache PIP
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
 
-      # ───── Install project with dev + adapter extras ─────
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install -U pip
-          pip install -e ".[dev,pgvector]"   # tooling + runtime libs
+          pip install -e ".[dev,pgvector]"
 
-      # ───── Run the test suite ─────
-      - name: Run pytest
+      # -------- Ruff lint --------
+      - name: Lint Check
+        run: |
+          ruff check src tests
+
+      # -------- mypy type-check (relaxed) --------
+      - name: Type Check
+        run: |
+          mypy -p vverb --pretty --show-error-codes
+
+      # -------- Run test suite --------
+      - name: Run Test
         env:
-          PYTHONPATH: src                   # src-layout convenience
+          PYTHONPATH: src
         run: |
           pytest -q

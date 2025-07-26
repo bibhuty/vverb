@@ -22,6 +22,7 @@ packages = [{ include = "vverb", from = "src" }]
 # 2. Optional adapter/client extras (users install what they need)
 # ------------------------------------------------------------------
 [project.optional-dependencies]
+
 pgvector = [
   "asyncpg>=0.29",
   "pgvector>=0.2.4"
@@ -39,12 +40,16 @@ dev = [
   "pytest>=7.4",
   "pytest-asyncio>=0.23",
   "testcontainers[postgres]>=3.7",
+
   # adapter libs needed for tests
   "asyncpg>=0.29",
   "pgvector>=0.2.4",
+
   # lint / format
   "ruff>=0.4",
   "black>=24.4",
+  "pre-commit>=3.7",        #  ← NEW
+
   # type-checking
   "mypy>=1.10"
 ]
@@ -63,3 +68,51 @@ pythonpath = ["src"]
 # ------------------------------------------------------------------
 [tool.hatch.build.targets.wheel]
 packages = ["src/vverb"]
+
+# ------------------------------------------------------------------
+# 5. Ruff – fast linter / formatter
+# ------------------------------------------------------------------
+[tool.ruff]
+# Match Black’s default line length
+line-length = 100
+target-version = "py311"
+
+# Auto-fix on `ruff --fix`
+fix = true
+
+# Enabled rule groups (pycodestyle, pyflakes, isort-style imports, bugbear)
+select = ["E", "F", "I", "B"]
+
+# Example ignore list (uncomment to tweak)
+# ignore = ["E501"]
+
+# ------------------------------------------------------------------
+# 6. Black – code formatter
+# ------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+# ------------------------------------------------------------------
+# 7. mypy — static type checker
+# ------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+
+# NEW — let mypy know that "src" is the top-level search path
+mypy_path = "src"
+
+# NEW — ask it to analyse the *package name* instead of a path
+packages = ["vverb"]
+
+# relaxed defaults while the code is in flux
+ignore_missing_imports = true
+check_untyped_defs      = false
+disallow_untyped_defs   = false
+warn_unused_ignores     = true
+
+# Per-directory overrides
+[[tool.mypy.overrides]]
+# Allow untyped tests for now
+module = "tests.*"
+ignore_errors = true

@@ -8,15 +8,16 @@ plus capability negotiation.
 
 from __future__ import annotations
 
-import asyncpg
-from asyncpg import Connection
 from contextlib import asynccontextmanager
 from typing import Any
 
-from .mapping import TYPE_MAP, METRIC_OPCLASS
-from ..base import BaseAdapter          # vverb.adapters.base
+import asyncpg
+
 from vverb._log import logger as _root_logger
+
+from ..base import BaseAdapter  # vverb.adapters.base
 from ..util.schema import TableSchema
+from .mapping import METRIC_OPCLASS, TYPE_MAP
 
 log = _root_logger.getChild("pgvector")
 
@@ -95,9 +96,7 @@ class PgVectorAdapter(BaseAdapter):
         """
         opclass = METRIC_OPCLASS.get(schema.vector.metric)
         if opclass is None:
-            raise ValueError(
-                f"Metric '{schema.vector.metric}' not supported by pgvector"
-            )
+            raise ValueError(f"Metric '{schema.vector.metric}' not supported by pgvector")
 
         # ---- build column list ----
         col_defs: list[str] = [
@@ -126,7 +125,7 @@ class PgVectorAdapter(BaseAdapter):
         )
 
         # ---- execute ----
-        async with self.pool.acquire() as conn:  # type: Connection
+        async with self.pool.acquire() as conn:
             await conn.execute(ddl)
             await conn.execute(index)
 
