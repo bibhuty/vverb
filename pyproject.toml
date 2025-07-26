@@ -95,31 +95,20 @@ select = ["E", "F", "I", "B"]
 line-length = 100
 target-version = ["py311"]
 
-# ------------------------------------------------------------------
-# 7. mypy — static type checker
-# ------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"
-
-# NEW — let mypy know that "src" is the top-level search path
 mypy_path = "src"
-
-# NEW — ask it to analyse the *package name* instead of a path
 packages = ["vverb"]
-
-# relaxed defaults while the code is in flux
 ignore_missing_imports = true
 check_untyped_defs      = false
 disallow_untyped_defs   = false
 warn_unused_ignores     = true
 
-# Per-directory overrides
 [[tool.mypy.overrides]]
-# Allow untyped tests for now
 module = "tests.*"
 ignore_errors = true
 
 [tool.commitizen]
-name = "cz_conventional_commits"   # enforce the 1.0.0 spec
-version = "0.0.1"                  # used when you run `cz bump`
+name = "cz_conventional_commits"
+version = "0.0.1"
 tag_format = "v$version"
