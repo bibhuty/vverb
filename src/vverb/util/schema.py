@@ -12,9 +12,11 @@ You can always extend these enums later without breaking callers:
 """
 
 from __future__ import annotations
-from enum import Enum
-from typing import Literal, Dict, Any, Sequence
+
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Dict, Sequence
+
 from vverb._log import logger as _root_logger
 
 log = _root_logger.getChild("util.schema")
@@ -23,16 +25,17 @@ log = _root_logger.getChild("util.schema")
 # Similarity metrics (vector space distance) ────────────────────────────────
 # ---------------------------------------------------------------------------
 
+
 class Metric(str, Enum):
-    COSINE         = "cosine"         # pgvector / Qdrant / Milvus / Weaviate / Pinecone
-    EUCLIDEAN      = "euclidean"      # Pinecone keyword
-    L2             = "l2"             # pgvector / Milvus (same as Euclidean)
-    DOT            = "dot"            # Weaviate
-    DOT_PRODUCT    = "dotproduct"     # Pinecone
-    INNER_PRODUCT  = "ip"             # pgvector / Milvus
-    HAMMING        = "hamming"        # Milvus (binary)
-    JACCARD        = "jaccard"        # Milvus (binary)
-    TANIMOTO       = "tanimoto"       # Milvus (binary)
+    COSINE = "cosine"  # pgvector / Qdrant / Milvus / Weaviate / Pinecone
+    EUCLIDEAN = "euclidean"  # Pinecone keyword
+    L2 = "l2"  # pgvector / Milvus (same as Euclidean)
+    DOT = "dot"  # Weaviate
+    DOT_PRODUCT = "dotproduct"  # Pinecone
+    INNER_PRODUCT = "ip"  # pgvector / Milvus
+    HAMMING = "hamming"  # Milvus (binary)
+    JACCARD = "jaccard"  # Milvus (binary)
+    TANIMOTO = "tanimoto"  # Milvus (binary)
     # add more later as Literal str Enum values
 
 
@@ -40,22 +43,24 @@ class Metric(str, Enum):
 # Scalar field types  ───────────────────────────────────────────────────────
 # ---------------------------------------------------------------------------
 
+
 class FieldType(str, Enum):
-    STRING   = "string"   # VARCHAR, TEXT, keyword, etc.
-    INT      = "int"      # 32-bit signed
-    BIGINT   = "bigint"   # 64-bit signed
-    FLOAT    = "float"    # 32-bit
-    DOUBLE   = "double"   # 64-bit
-    BOOLEAN  = "bool"
-    JSON     = "json"
-    DATE     = "date"
-    UUID     = "uuid"
+    STRING = "string"  # VARCHAR, TEXT, keyword, etc.
+    INT = "int"  # 32-bit signed
+    BIGINT = "bigint"  # 64-bit signed
+    FLOAT = "float"  # 32-bit
+    DOUBLE = "double"  # 64-bit
+    BOOLEAN = "bool"
+    JSON = "json"
+    DATE = "date"
+    UUID = "uuid"
     # extend with "binary", "int8", "int16", etc. when an adapter needs it
 
 
 # ---------------------------------------------------------------------------
 # Dataclasses for high-level schema description
 # ---------------------------------------------------------------------------
+
 
 @dataclass(slots=True)
 class VectorCol:

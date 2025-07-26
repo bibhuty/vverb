@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import pytest
 from vverb.pgvector import connect
 
@@ -20,6 +21,7 @@ async def test_capabilities_structure(pgvector_config: tuple[str, int, int]):
 
     await db.close()
 
+
 async def test_connect_smoke(pgvector_config: tuple[str, int, int]):
     dsn, min_pool_size, max_pool_size = pgvector_config
     """
@@ -27,6 +29,8 @@ async def test_connect_smoke(pgvector_config: tuple[str, int, int]):
     when no explicit connection kwargs are provided (adapter reads
     PGV_* env vars set by the fixture).
     """
-    db = await connect(dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size)     # <- no dsn/host/port
-    assert db.pool is not None               # pool object exists
+    db = await connect(
+        dsn=dsn, min_pool_size=min_pool_size, max_pool_size=max_pool_size
+    )  # <- no dsn/host/port
+    assert db.pool is not None  # pool object exists
     await db.close()

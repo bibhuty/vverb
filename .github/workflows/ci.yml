@@ -38,3 +38,6 @@ jobs:
           PYTHONPATH: src                   # src-layout convenience
         run: |
           pytest -q
+      - name: Ruff lint
+        run: |
+          ruff src tests
