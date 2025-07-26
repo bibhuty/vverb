@@ -34,7 +34,7 @@ jobs:
       # -------- Ruff lint --------
       - name: Ruff lint
         run: |
-          ruff src tests
+          ruff check src tests
 
       # -------- mypy type-check (relaxed) --------
       - name: mypy
