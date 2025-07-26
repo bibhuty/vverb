@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from vverb.pgvector import connect
 
 pytestmark = pytest.mark.asyncio

@@ -1,3 +1,4 @@
+# workflows/ci.yml
 name: CI
 
 on:
@@ -30,17 +31,17 @@ jobs:
           python -m pip install -U pip
           pip install -e ".[dev,pgvector]"
 
-      # ───── Ruff lint ─────
+      # -------- Ruff lint --------
       - name: Ruff lint
         run: |
           ruff src tests
 
-      # ───── mypy type-check (relaxed config) ─────
+      # -------- mypy type-check (relaxed) --------
       - name: mypy
         run: |
-          mypy src/vverb
+          mypy -p vverb --pretty --show-error-codes
 
-      # ───── Run test suite ─────
+      # -------- Run test suite --------
       - name: Run pytest
         env:
           PYTHONPATH: src

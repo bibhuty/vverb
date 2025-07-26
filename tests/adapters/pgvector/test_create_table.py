@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 import pytest_asyncio
+
 from vverb.pgvector import connect
 from vverb.util.schema import FieldCol, FieldType, Metric, TableSchema, VectorCol
 

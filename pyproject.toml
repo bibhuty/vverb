@@ -99,17 +99,17 @@ target-version = ["py311"]
 [tool.mypy]
 python_version = "3.11"
 
-# Only complain about import errors and undefined names
-check_untyped_defs = false
-disallow_untyped_defs = false
-warn_return_any = false
-warn_unused_ignores = true
+# NEW — let mypy know that "src" is the top-level search path
+mypy_path = "src"
 
-# Project files to analyse
-files = ["src/vverb"]
+# NEW — ask it to analyse the *package name* instead of a path
+packages = ["vverb"]
 
-# Ignore third-party libs without stubs
+# relaxed defaults while the code is in flux
 ignore_missing_imports = true
+check_untyped_defs      = false
+disallow_untyped_defs   = false
+warn_unused_ignores     = true
 
 # Per-directory overrides
 [[tool.mypy.overrides]]
