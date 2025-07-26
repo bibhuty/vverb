@@ -92,3 +92,27 @@ select = ["E", "F", "I", "B"]
 [tool.black]
 line-length = 100
 target-version = ["py311"]
+
+# ------------------------------------------------------------------
+# 7. mypy — static type checker
+# ------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+
+# Only complain about import errors and undefined names
+check_untyped_defs = false
+disallow_untyped_defs = false
+warn_return_any = false
+warn_unused_ignores = true
+
+# Project files to analyse
+files = ["src/vverb"]
+
+# Ignore third-party libs without stubs
+ignore_missing_imports = true
+
+# Per-directory overrides
+[[tool.mypy.overrides]]
+# Allow untyped tests for now
+module = "tests.*"
+ignore_errors = true

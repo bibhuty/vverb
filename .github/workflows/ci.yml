@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]          # keep main green
+    branches: [main]
   pull_request:
-    branches: [main]          # run on every PR targeting main
+    branches: [main]
 
 jobs:
   tests:
@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ───── Set up Python & cache pip ─────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -26,18 +25,24 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
 
-      # ───── Install project with dev + adapter extras ─────
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          pip install -e ".[dev,pgvector]"   # tooling + runtime libs
+          pip install -e ".[dev,pgvector]"
 
-      # ───── Run the test suite ─────
-      - name: Run pytest
-        env:
-          PYTHONPATH: src                   # src-layout convenience
-        run: |
-          pytest -q
+      # ───── Ruff lint ─────
       - name: Ruff lint
         run: |
           ruff src tests
+
+      # ───── mypy type-check (relaxed config) ─────
+      - name: mypy
+        run: |
+          mypy src/vverb
+
+      # ───── Run test suite ─────
+      - name: Run pytest
+        env:
+          PYTHONPATH: src
+        run: |
+          pytest -q

@@ -125,7 +125,7 @@ class PgVectorAdapter(BaseAdapter):
         )
 
         # ---- execute ----
-        async with self.pool.acquire() as conn:  # type: Connection
+        async with self.pool.acquire() as conn:
             await conn.execute(ddl)
             await conn.execute(index)
 
