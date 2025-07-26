@@ -3,9 +3,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   sanity-check:
@@ -40,7 +40,9 @@ jobs:
       - name: Type Check
         run: |
           mypy -p vverb --pretty --show-error-codes
-
+      - name: Check commit messages
+        run: |
+          pipx run commitizen check --rev-range origin/main..HEAD
       # -------- Run test suite --------
       - name: Run Test
         env:
