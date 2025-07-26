@@ -40,6 +40,7 @@ jobs:
       - name: Type Check
         run: |
           mypy -p vverb --pretty --show-error-codes
+      # -------- Commit message check --------
       - name: Check commit messages
         run: |
           pipx run commitizen check --rev-range origin/main..HEAD
