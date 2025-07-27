@@ -92,24 +92,3 @@ class WeaviateAdapter(BaseAdapter):
     async def upsert(self, collection_name, data):
         pass
 
-
-# For Temporary Test Purpose. Remove it in Future.
-if __name__ == "__main__":
-    # Example usage
-    async def main():
-        try:
-            client = await WeaviateAdapter.connect(
-                http_host="localhost",
-                http_port=8080,
-                http_secure=False,
-                grpc_host="localhost",
-                grpc_port=50051,
-                grpc_secure=False
-            )
-            adapter = WeaviateAdapter(client)
-            log.info("Weaviate client connected successfully.")
-        finally:
-            await adapter.close()
-            log.info("Weaviate client closed.")
-
-    asyncio.run(main())
