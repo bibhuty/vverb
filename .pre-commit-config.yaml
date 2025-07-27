@@ -1,16 +1,21 @@
 repos:
+  # ---------------- Ruff ----------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.5
     hooks:
       - id: ruff
         args: [--fix]
+        stages: [pre-commit]
 
+  # ---------------- Black ---------------
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
       - id: black
         language_version: python3.11
+        stages: [pre-commit]
 
+  # ---------------- mypy ----------------
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.17.0
     hooks:
@@ -22,3 +27,11 @@ repos:
           - "vverb"
           - "--pretty"
           - "--show-error-codes"
+        stages: [pre-commit]
+
+  # ---------- Commitizen (commit-msg) ---
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.8.3
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
