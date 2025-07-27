@@ -51,6 +51,7 @@ class WeaviateAdapter(BaseAdapter):
         grpc_host: str = "localhost",
         grpc_port: int = 50051,
         grpc_secure: bool = False,
+        **cfg: Any
         ) -> WeaviateAsyncClient:
         """
         Create and connect a WeaviateAsyncClient instance.
