@@ -40,10 +40,10 @@ def weaviate_config() -> Generator[tuple[str, str], Any, None]:
     - Tears it down when tests complete
     """
     # Ensure no stale container
-    _run_cmd("docker-compose" ,"-f" , str(DOCKER_COMPOSE_PATH), "down")
+    _run_cmd("docker", "compose" ,"-f" , str(DOCKER_COMPOSE_PATH), "down")
 
     # Launch fresh container
-    _run_cmd("docker-compose", "-f", str(DOCKER_COMPOSE_PATH), "up", "-d")
+    _run_cmd("docker", "compose", "-f", str(DOCKER_COMPOSE_PATH), "up", "-d")
 
     # Wait for Weaviate to be ready
     time.sleep(10)  # Increase if needed for slow startup
@@ -55,7 +55,7 @@ def weaviate_config() -> Generator[tuple[str, str], Any, None]:
     yield host, port
 
     # Teardown containers
-    _run_cmd("docker-compose", "-f", str(DOCKER_COMPOSE_PATH), "down")
+    _run_cmd("docker", "compose", "-f", str(DOCKER_COMPOSE_PATH), "down")
 
 # ───────────────────────────────────────────────────────────────
 # 2. Per-test async connection (stub, to be replaced with actual client)
