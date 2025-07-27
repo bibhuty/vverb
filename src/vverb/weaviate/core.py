@@ -52,7 +52,7 @@ class WeaviateAdapter(BaseAdapter):
         grpc_port: int = 50051,
         grpc_secure: bool = False,
         **cfg: Any
-        ) -> WeaviateAsyncClient:
+        ) -> WeaviateAdapter:
         """
         Create and connect a WeaviateAsyncClient instance.
         This method is used to instantiate the client with default parameters.
@@ -70,7 +70,9 @@ class WeaviateAdapter(BaseAdapter):
                 ),
             )
         await client.connect()
-        return client
+        adaptor = cls(client, **cfg)
+        await adaptor.client.is_ready() # Ensure the client is ready
+        return adaptor
 
     def capabilities(self):
         pass
