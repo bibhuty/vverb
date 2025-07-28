@@ -46,7 +46,6 @@ pythonpath = ["src"]
 packages = ["src/vverb"]
 
 [tool.ruff]
-# Match Black’s default line length
 line-length = 100
 target-version = "py311"
 fix = true
