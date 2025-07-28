@@ -1,4 +1,4 @@
-# tests/conftest.py
+# tests/vverb/pgvector/conftest.py
 from __future__ import annotations
 
 import asyncio
@@ -25,14 +25,20 @@ PGV_MIN_SIZE = os.getenv("PGV_MIN_SIZE", "1")
 PGV_MAX_SIZE = os.getenv("PGV_MAX_SIZE", "10")
 
 # ───────────────────────────────────────────────────────────────
-# Docker & DSN constants
+# Docker Compose config: Use correct relative path
 # ───────────────────────────────────────────────────────────────
+DOCKER_COMPOSE_FILE = os.getenv(
+    "PGV_DOCKER_COMPOSE",
+    str(
+        (
+            pathlib.Path(__file__).resolve().parent.parent.parent.parent
+            / "docker"
+            / "test"
+            / "docker-compose.pgvector-test.yaml"
+        )
+    ),
+)
 CONTAINER_NAME = os.getenv("PGV_CONTAINER_NAME", "pgvector-test")
-IMAGE_TAG = os.getenv("PGV_IMAGE_TAG", "pgvector/pgvector:0.8.0-pg17")
-
-INIT_SQL_PATH = pathlib.Path(__file__).parent / "init-vector.sql"
-if not INIT_SQL_PATH.exists():
-    raise FileNotFoundError("Create init-vector.sql in tests/adapters/pgvector first!")
 
 
 def _run_cmd(*args: str):
@@ -40,44 +46,43 @@ def _run_cmd(*args: str):
 
 
 # ───────────────────────────────────────────────────────────────
-# 1. Session-wide pgvector container
+# 1. Session-wide pgvector container via docker-compose
 # ───────────────────────────────────────────────────────────────
 @pytest.fixture(scope="session")
 def pgvector_config() -> Generator[tuple[str, str, str], Any, None]:
     """
-    Starts a pgvector container once per session, then:
-    - Yields the DSN
-    - Tears it down when tests complete
+    Starts a pgvector container once per session using docker-compose,
+    yields the DSN, and tears down when tests complete.
     """
-    # Ensure no stale container
+    # Tear down any previous container (ignore errors)
     subprocess.run(
-        ["docker", "rm", "-f", CONTAINER_NAME], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ["docker", "compose", "-f", DOCKER_COMPOSE_FILE, "down", "-v"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
-    # Launch fresh
-    _run_cmd(
-        "docker",
-        "run",
-        "--name",
-        CONTAINER_NAME,
-        "-e",
-        f"POSTGRES_USER={PGV_USER}",
-        "-e",
-        f"POSTGRES_PASSWORD={PGV_PASS}",
-        "-e",
-        f"POSTGRES_DB={PGV_DB}",
-        "-v",
-        f"{INIT_SQL_PATH}:/docker-entrypoint-initdb.d/init-vector.sql:ro",
-        "-p",
-        f"{PGV_PORT}:5432",
-        "-d",
-        IMAGE_TAG,
-    )
+    # Launch via docker-compose
+    _run_cmd("docker", "compose", "-f", DOCKER_COMPOSE_FILE, "up", "-d")
 
     # Wait for Postgres to be ready
-    time.sleep(5)
+    for _ in range(15):
+        try:
+            conn = asyncio.run(
+                asyncpg.connect(
+                    host=PGV_HOST,
+                    port=int(PGV_PORT),
+                    user=PGV_USER,
+                    password=PGV_PASS,
+                    database=PGV_DB,
+                )
+            )
+            conn.close()
+            break
+        except Exception:
+            time.sleep(1)
+    else:
+        raise RuntimeError("pgvector test database did not start in time.")
 
-    # Build DSN pointing at our container
     dsn = f"postgresql://{PGV_USER}:{PGV_PASS}@{PGV_HOST}:{PGV_PORT}/{PGV_DB}"
     min_pool_size = PGV_MIN_SIZE
     max_pool_size = PGV_MAX_SIZE
@@ -85,7 +90,7 @@ def pgvector_config() -> Generator[tuple[str, str, str], Any, None]:
     yield dsn, min_pool_size, max_pool_size
 
     # Teardown
-    _run_cmd("docker", "rm", "-f", CONTAINER_NAME)
+    _run_cmd("docker", "compose", "-f", DOCKER_COMPOSE_FILE, "down", "-v")
 
 
 # ───────────────────────────────────────────────────────────────
@@ -107,9 +112,13 @@ async def conn(pgvector_config: tuple[str, int, int]):
           id        text PRIMARY KEY,
           embedding vector(3)
         );
+        """
+    )
+    await conn.execute(
+        """
+        CREATE EXTENSION IF NOT EXISTS vector;
     """
     )
-
     yield conn
 
     await conn.execute("TRUNCATE items;")
