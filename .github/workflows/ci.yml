@@ -35,6 +35,7 @@ jobs:
           mypy -p vverb --pretty --show-error-codes
       # -------- Commit message check --------
       - name: Check commit messages
+        if: github.event_name == 'pull_request'
         run: |
           python -m commitizen check --rev-range origin/main..HEAD
       # -------- Run test suite --------

@@ -11,6 +11,7 @@ dependencies = [
   "asyncpg>=0.29"
 ]
 packages = [{ include = "vverb", from = "src" }]
+license = "Apache-2.0"
 
 [project.optional-dependencies]
 pgvector = [
