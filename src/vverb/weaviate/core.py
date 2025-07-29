@@ -29,7 +29,7 @@ class WeaviateAdapter(BaseAdapter):
     Parameters accepted by `connect`
     --------------------------------
     http_host : str             HTTP host, default "localhost"
-    http_port : int             HTTP port, default 8080
+    http_port : int             HTTP port, default 8000
     http_secure : bool          Use HTTPS, default False
     grpc_host : str             gRPC host, default "localhost"
     grpc_port : int             gRPC port, default 50052
