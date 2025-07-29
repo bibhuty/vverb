@@ -1,0 +1,1 @@
+docker compose -f docker/dev/docker-compose.pgvector.yaml up -d
