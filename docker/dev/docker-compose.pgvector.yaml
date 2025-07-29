@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: pgvector
       POSTGRES_DB: vverb
     ports:
-      - "6263:5432"
+      - "6262:5432"
     volumes:
       - ./init-vector.sql:/docker-entrypoint-initdb.d/init-vector.sql:ro
     healthcheck:
