@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import pytest
 
 from vverb.weaviate import connect
+
 
 @pytest.mark.asyncio
 async def test_connection_smoke(weaviate_client):

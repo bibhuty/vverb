@@ -17,7 +17,12 @@ import pytest_asyncio
 
 WEAVIATE_HOST = os.getenv("WEAVIATE_HOST", "localhost")
 WEAVIATE_PORT = os.getenv("WEAVIATE_PORT", "8000")
-DOCKER_COMPOSE_PATH = pathlib.Path(__file__).parent.parent.parent.parent / "docker" / "test" / "docker-compose.weaviate-test.yml"
+DOCKER_COMPOSE_PATH = (
+    pathlib.Path(__file__).parent.parent.parent.parent
+    / "docker" 
+    / "test" 
+    / "docker-compose.weaviate-test.yml")
+
 # ───────────────────────────────────────────────────────────────
 # Helper to run shell commands
 # ───────────────────────────────────────────────────────────────

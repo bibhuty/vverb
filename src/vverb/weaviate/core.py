@@ -8,15 +8,15 @@ plus capability negotiation.
 """
 
 from __future__ import annotations
+
 from typing import Any
-from vverb._log import logger as _root_logger
-from vverb.base import BaseAdapter  # vverb.adapters.base
 
 import weaviate
-from weaviate.connect import ConnectionParams
 from weaviate import WeaviateAsyncClient
-import os
-import asyncio
+from weaviate.connect import ConnectionParams
+
+from vverb._log import logger as _root_logger
+from vverb.base import BaseAdapter  # vverb.adapters.base
 
 log = _root_logger.getChild("weaviate")
 
