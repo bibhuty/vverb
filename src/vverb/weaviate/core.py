@@ -46,11 +46,7 @@ class WeaviateAdapter(BaseAdapter):
     async def connect(
         cls,
         http_host: str = "localhost",
-<<<<<<< HEAD
-        http_port: int = 8080,
-=======
         http_port: int = 8000,
->>>>>>> de49351 (testing weaviate connection)
         http_secure: bool = False,
         grpc_host: str = "localhost",
         grpc_port: int = 50051,
@@ -95,7 +91,3 @@ class WeaviateAdapter(BaseAdapter):
 
     async def upsert(self, collection_name, data):
         pass
-<<<<<<< HEAD
-
-=======
->>>>>>> de49351 (testing weaviate connection)

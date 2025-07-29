@@ -9,8 +9,4 @@ from .core import WeaviateAdapter
 
 connect = WeaviateAdapter.connect
 
-<<<<<<< HEAD
 __all__: list[str] = ["connect", "WeaviateAdapter"]
-=======
-__all__: list[str] = ["connect", "WeaviateAdapter"]
->>>>>>> de49351 (testing weaviate connection)
