@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    # 1️⃣  Fetch code
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0             # shallow clone keeps things fast
+
+    # 2️⃣  Python toolchain
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    # 3️⃣  Install only what this workflow needs
+    - name: Install project + tooling
+      run: |
+        python -m pip install -U pip
+
+        # Editable install of vverb itself (no extras, no test deps)
+        pip install -e .
+
+        # Lint / type / commit-msg tools only
+        pip install \
+          ruff==0.4.* \
+          mypy==1.17.* \
+          commitizen==3.13.*
+
+    # 4️⃣  Static quality gates
+    - name: Ruff lint
+      run: ruff check src
+
+    - name: Mypy type-check
+      run: mypy -p vverb --pretty --show-error-codes
+
+    # 5️⃣  Conventional-commit guard (PRs only)
+    - name: Check commit messages
+      if: ${{ github.event_name == 'pull_request' }}
+      run: python -m commitizen check --rev-range origin/main..HEAD

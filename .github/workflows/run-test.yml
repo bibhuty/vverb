@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  sanity-check:
+  run-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -25,19 +25,6 @@ jobs:
         run: |
           python -m pip install -U pip
           pip install -e ".[dev,pgvector]"
-      # -------- Ruff lint --------
-      - name: Lint Check
-        run: |
-          ruff check src tests
-      # -------- mypy type-check (relaxed) --------
-      - name: Type Check
-        run: |
-          mypy -p vverb --pretty --show-error-codes
-      # -------- Commit message check --------
-      - name: Check commit messages
-        if: github.event_name == 'pull_request'
-        run: |
-          python -m commitizen check --rev-range origin/main..HEAD
       # -------- Run test suite --------
       - name: Run Test
         env:
