@@ -18,6 +18,9 @@ pgvector = [
   "asyncpg>=0.29",
   "pgvector>=0.2.4"
 ]
+weaviate = [
+  "weaviate-client>=4.4"
+]
 dev = [
   # testing
   "pytest>=7.4",
@@ -25,6 +28,7 @@ dev = [
   "testcontainers[postgres]>=3.7",
   "asyncpg>=0.29",
   "pgvector>=0.2.4",
+  "weaviate-client>=4.4",
   "ruff>=0.4",
   "black>=24.4",
   "pre-commit>=3.7",
@@ -45,6 +49,8 @@ packages = ["src/vverb"]
 line-length = 100
 target-version = "py311"
 fix = true
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "B"]
 
 [tool.black]
