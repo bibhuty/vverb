@@ -1,0 +1,35 @@
+name: PR template lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-placeholders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR description
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # List of placeholder strings that *must* be removed or replaced.
+          REQUIRED_PHRASES=(
+            "Describe the user impact"
+            "High-level approach"
+            "Screenshots, benchmark numbers"
+            "Feature flag? DB migration?"
+            "e.g. “Start with"
+          )
+
+          missing=0
+          for phrase in "${REQUIRED_PHRASES[@]}"; do
+            if echo "$BODY" | grep -q "$phrase"; then
+              echo "::error::PR description still contains placeholder: \"$phrase\""
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -eq 1 ]; then
+            echo "::error::Please fill out the PR template before requesting review."
+            exit 1
+          fi
